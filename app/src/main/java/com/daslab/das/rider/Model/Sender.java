@@ -7,7 +7,7 @@ package com.daslab.das.rider.Model;
 public class Sender {
 
 
-        public Data data ;
+        public String data ;
         public String to ;
 
     public Sender()
@@ -15,16 +15,16 @@ public class Sender {
 
     }
 
-    public Sender(Data data, String to) {
+    public Sender(String data, String to) {
         this.data = data;
         this.to = to;
     }
 
-    public Data getData() {
+    public String getData() {
         return data;
     }
 
-    public void setData(Data data) {
+    public void setData(String data) {
         this.data = data;
     }
 

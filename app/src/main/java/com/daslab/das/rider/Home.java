@@ -2,6 +2,7 @@ package com.daslab.das.rider;
 
 
 
+import android.app.Notification;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -43,6 +44,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.Gson;
 
 import android.Manifest;
@@ -121,6 +123,10 @@ public class Home extends AppCompatActivity
 
     IFCMService mService;
 
+    //Persene system
+
+    DatabaseReference driversAvailable;
+
 
 
     @Override
@@ -161,6 +167,7 @@ public class Home extends AppCompatActivity
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
 //
 //       //Geo Fire
 //
@@ -195,7 +202,7 @@ public class Home extends AppCompatActivity
         });
 
 
-        setUpLocation();
+        //setUpLocation();
     }
 
     private void sendRequestToDriver(String driverId) {
@@ -217,9 +224,11 @@ public class Home extends AppCompatActivity
 
                                         ,mLastLocation.getLongitude()));
 
-                            Data data = new Data("Das",json_lat_lng);//its send to driver app and we will deserialize it again
+                            String riderToken = FirebaseInstanceId.getInstance().getToken();
 
-                            Sender content = new Sender(data,token.getToken());//send this data token to
+                            Notification data = new Notification(riderToken,json_lat_lng);//its send to driver app and we will deserialize it again
+
+                            Sender content = new Sender(token.getToken(),data);//send this data token to
 
 
                             mService.sendMessage(content)
@@ -369,7 +378,7 @@ public class Home extends AppCompatActivity
         }
 
         //dada plasse see this line all problem hare  dug
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mlocationRequest, this);
+   //     LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mlocationRequest, this);
 
     }
 
@@ -388,6 +397,23 @@ public class Home extends AppCompatActivity
 
 
         if (mLastLocation != null) {
+
+
+            driversAvailable = FirebaseDatabase.getInstance().getReference(Common.driver_tbl);
+            driversAvailable.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    //if have any chabge from driver table , we will reload all drivers avaible
+                    loadAllAvailabeDriver();
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
 
             final double latitude = mLastLocation.getLatitude();
             final double longitute = mLastLocation.getLongitude();
@@ -420,6 +446,16 @@ public class Home extends AppCompatActivity
     }
 
     private void loadAllAvailabeDriver() {
+
+        //First , we need delete all markers on map (onclude out location marker and acabilbe drivers marker)
+
+        mMap.clear();
+        //after that we will load all the drivers
+
+        mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude()))
+                            .title("You"));
+
+
         //Load all drivers
 
         DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference(Common.driver_tbl);
@@ -602,10 +638,10 @@ public class Home extends AppCompatActivity
 
         //eita jadi open kare dai than ja latlng ase oi location ta open kare
 
-//        googleMap.addMarker(new MarkerOptions().position(new LatLng(23.8103,90.4125))
-//                .title("Bangladesh"));
-//
-//        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(23.8103,90.4125),12));
+        googleMap.addMarker(new MarkerOptions().position(new LatLng(23.8103,90.4125))
+                .title("Bangladesh"));
+
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(23.8103,90.4125),12));
     }
 
     @Override
