@@ -12,7 +12,12 @@ import android.os.Bundle;
 import com.daslab.das.rider.Common.Common;
 import com.daslab.das.rider.Helper.CustomInfoWindow;
 import com.daslab.das.rider.Model.BottomSheetRiderFragment;
+import com.daslab.das.rider.Model.Data;
+import com.daslab.das.rider.Model.FCMResponse;
+import com.daslab.das.rider.Model.Sender;
+import com.daslab.das.rider.Model.Token;
 import com.daslab.das.rider.Model.User;
+import com.daslab.das.rider.Remote.IFCMService;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -38,6 +43,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+
 import android.Manifest;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -51,6 +58,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class Home extends AppCompatActivity
@@ -106,6 +117,11 @@ public class Home extends AppCompatActivity
 
     private static final int LIMIT = 3;
 
+    // send the alart
+
+    IFCMService mService;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +131,11 @@ public class Home extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mService = Common.getFCMService();
+
+
+
 
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -163,12 +184,74 @@ public class Home extends AppCompatActivity
         btnPickUpRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                if (!isDriverFound)
                 requestPickupHere(FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+                else
+                    sendRequestToDriver(driverId);
+
             }
         });
 
 
         setUpLocation();
+    }
+
+    private void sendRequestToDriver(String driverId) {
+
+        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference(Common.token_tbl);
+        tokens.orderByKey().equalTo(driverId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        for (DataSnapshot postSnapShot:dataSnapshot.getChildren())
+                        {
+                            Token token = postSnapShot.getValue(Token.class);//get token object form dataase
+                            //with key
+
+                            //Make raw payload - covert ot lanlat to json
+
+                            String json_lat_lng = new Gson().toJson(new LatLng(mLastLocation.getLatitude()
+
+                                        ,mLastLocation.getLongitude()));
+
+                            Data data = new Data("Das",json_lat_lng);//its send to driver app and we will deserialize it again
+
+                            Sender content = new Sender(data,token.getToken());//send this data token to
+
+
+                            mService.sendMessage(content)
+                                    .enqueue(new Callback<FCMResponse>() {
+                                        @Override
+                                        public void onResponse(Call<FCMResponse> call, Response<FCMResponse> response) {
+                                            if (response.body().success == 1)
+                                           Toast.makeText(Home.this," Request to sent!",Toast.LENGTH_SHORT).show();
+
+                                            else
+                                                Toast.makeText(Home.this," Failed !",Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<FCMResponse> call, Throwable t) {
+
+                                            Log.e("ERROR",t.getMessage());
+
+
+
+                                        }
+                                    });
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     //update location in firebase
