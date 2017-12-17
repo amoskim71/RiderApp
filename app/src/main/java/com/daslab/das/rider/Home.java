@@ -1,7 +1,6 @@
 package com.daslab.das.rider;
 
 
-
 import android.app.Notification;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -10,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
+
 import com.daslab.das.rider.Common.Common;
 import com.daslab.das.rider.Helper.CustomInfoWindow;
 import com.daslab.das.rider.Model.BottomSheetRiderFragment;
@@ -128,7 +128,6 @@ public class Home extends AppCompatActivity
     DatabaseReference driversAvailable;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -139,9 +138,6 @@ public class Home extends AppCompatActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mService = Common.getFCMService();
-
-
-
 
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -193,7 +189,7 @@ public class Home extends AppCompatActivity
             public void onClick(View v) {
 
                 if (!isDriverFound)
-                requestPickupHere(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    requestPickupHere(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
                 else
                     sendRequestToDriver(driverId);
@@ -213,8 +209,7 @@ public class Home extends AppCompatActivity
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        for (DataSnapshot postSnapShot:dataSnapshot.getChildren())
-                        {
+                        for (DataSnapshot postSnapShot : dataSnapshot.getChildren()) {
                             Token token = postSnapShot.getValue(Token.class);//get token object form dataase
                             //with key
 
@@ -222,13 +217,13 @@ public class Home extends AppCompatActivity
 
                             String json_lat_lng = new Gson().toJson(new LatLng(mLastLocation.getLatitude()
 
-                                        ,mLastLocation.getLongitude()));
+                                    , mLastLocation.getLongitude()));
 
                             String riderToken = FirebaseInstanceId.getInstance().getToken();
 
-                            Notification data = new Notification(riderToken,json_lat_lng);//its send to driver app and we will deserialize it again
+                                  Notification data = new Notification(riderToken,json_lat_lng);//its send to driver app and we will deserialize it again
 
-                            Sender content = new Sender(token.getToken(),data);//send this data token to
+                                Sender content = new Sender(token.getToken(),data);//send this data token to
 
 
                             mService.sendMessage(content)
@@ -254,7 +249,8 @@ public class Home extends AppCompatActivity
 
                         }
 
-                    }
+                        }
+
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -378,7 +374,7 @@ public class Home extends AppCompatActivity
         }
 
         //dada plasse see this line all problem hare  dug
-   //     LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mlocationRequest, this);
+        //     LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mlocationRequest, this);
 
     }
 
@@ -452,8 +448,8 @@ public class Home extends AppCompatActivity
         mMap.clear();
         //after that we will load all the drivers
 
-        mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude()))
-                            .title("You"));
+        mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                .title("You"));
 
 
         //Load all drivers
@@ -638,10 +634,10 @@ public class Home extends AppCompatActivity
 
         //eita jadi open kare dai than ja latlng ase oi location ta open kare
 
-        googleMap.addMarker(new MarkerOptions().position(new LatLng(23.8103,90.4125))
+        googleMap.addMarker(new MarkerOptions().position(new LatLng(23.8103, 90.4125))
                 .title("Bangladesh"));
 
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(23.8103,90.4125),12));
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(23.8103, 90.4125), 12));
     }
 
     @Override
